@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String?
+  type       String?
+  step1      Step1?
+  step2      Step2?
+  step3      Step3?
+  Step4      Step4?
+  Step5      Step5?
+  Step6      Step6?
+  Step7      Step7?
+  created_at DateTime @default(now())
+}
+
+model Step1 {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+  notify_candidate String?
+  notify_client    String?
+  notify_admin     String?
+  form_filled_by   String?
+  client_id        String?
+  process          String?
+  name             String?
+  gender           String?
+  dob              String?
+  father_name      String?
+  mobile_no        String?
+  email_id         String?
+  created_at       DateTime @default(now())
+}
+
+model Step2 {
+  id                     String   @id @default(uuid())
+  country_id             String?
+  state_id               String?
+  district_id            String?
+  city_id                String?
+  postal_id              String?
+  house_type             String?
+  stay_from_date         String?
+  stay_till_date         String?
+  full_address           String?
+  address_proof_file     Bytes? // Change to Bytes to store binary data
+  address_proof_mimetype String?
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id])
+  createdAt              DateTime @default(now())
+}
+
+model Step3 {
+  id                    String  @id @default(uuid())
+  userId                String  @unique
+  user                  User    @relation(fields: [userId], references: [id])
+  pan_number            String?
+  cibil_score           String?
+  aadhar_number         String?
+  cibil_report          Bytes?
+  pan_card              Bytes?
+  aadhar_card           Bytes?
+  cibil_report_mimetype String?
+  pan_card_mimetype     String?
+  aadhar_card_mimetype  String?
+}
+
+model Step4 {
+  id               String   @id @default(uuid())
+  ref_name         String?
+  ref_designation  String?
+  company_name     String?
+  ref_contact_num  String?
+  ref_email        String?
+  ref_relationship String?
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+  createdAt        DateTime @default(now())
+}
+
+model Step5 {
+  id                       String  @id @default(uuid())
+  companyName              String?
+  companyEmail             String?
+  companyLocation          String?
+  employeeId               String?
+  designation              String?
+  from                     String?
+  to                       String?
+  salary                   String?
+  salarySlip               Bytes? // For file uploads, use Bytes to store binary data
+  salarySlipMimeType       String?
+  relievingLetter          Bytes?
+  relievingLetterMimeType  String?
+  experienceLetter         Bytes?
+  experienceLetterMimeType String?
+  reasonForLeaving         String?
+  userId                   String  @unique
+  user                     User    @relation(fields: [userId], references: [id])
+}
+
+model Step6 {
+  id                  String  @id @default(uuid())
+  course_name         String?
+  heighest_qualify    String?
+  university_name     String?
+  country             String?
+  state               String?
+  city                String?
+  duration_start      String?
+  duration_end        String?
+  passing_year        String?
+  gpa_percentage      String?
+  roll_number         String?
+  certificate_number  String?
+  certificate         Bytes? // For file uploads, use Bytes to store binary data
+  certificateMimeType String?
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id])
+}
+
+model Step7 {
+  id                           String   @id @default(uuid())
+  aadharNumber                 String?
+  aadharUpload                 Bytes? // For file uploads, use Bytes to store binary data
+  aadharUploadMimeType         String?
+  panNumber                    String?
+  panUpload                    Bytes?
+  panUploadMimeType            String?
+  drivingLicenseNumber         String?
+  drivingLicenseUpload         Bytes?
+  drivingLicenseUploadMimeType String?
+  userId                       String   @unique
+  user                         User     @relation(fields: [userId], references: [id])
+}

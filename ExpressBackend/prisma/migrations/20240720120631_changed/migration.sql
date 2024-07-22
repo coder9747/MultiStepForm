@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Step1` MODIFY `dob` VARCHAR(191) NOT NULL;
