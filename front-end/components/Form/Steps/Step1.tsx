@@ -102,22 +102,24 @@ const initialData = {
 const Step1 = () => {
   const session = useSession();
   const [step1Data, setStep1Data] = useState<Step1>(initialData);
-  const [isPreValFlag,setIsPreValFlag] = useState(false);
+  const [isPreValFlag, setIsPreValFlag] = useState(false);
   useEffect(() => {
-    let token: any = () => { };
+    let timeOut: NodeJS.Timeout | null = null;
     if (session.status == "authenticated" && isPreValFlag) {
       const userId = session.data.user.id;
-      axios.post("http://localhost:10000/api/v1/form/upsert/step1", {
-        userId,
-        data: step1Data,
-      }, { cancelToken: new axios.CancelToken((c) => token = c) })
-        .then((res) => {
-          console.log(res.data);
-        }).catch((err) => {
-          console.log('canceled');
+      timeOut = setTimeout(() => {
+        axios.post("http://localhost:10000/api/v1/form/upsert/step1", {
+          userId,
+          data: step1Data,
         })
+          .then((res) => {
+            console.log(res.data);
+          }).catch((err) => {
+            console.log('canceled');
+          })
+      }, 3000);
     }
-    return () => token();
+    return () => clearTimeout(timeOut);
 
   }, [step1Data]);
   useEffect(() => {
@@ -130,7 +132,7 @@ const Step1 = () => {
         }
       }).catch((error) => {
         console.error('failed to get previews data');
-      }).finally(()=>setTimeout(()=>setIsPreValFlag(true),500));
+      }).finally(() => setTimeout(() => setIsPreValFlag(true), 500));
     };
   }, [session]);
 
