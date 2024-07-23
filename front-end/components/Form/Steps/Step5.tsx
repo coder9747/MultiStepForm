@@ -132,14 +132,18 @@ const Step5 = () => {
         }
     }, [session])
     useEffect(() => {
+        let timeOut: NodeJS.Timeout | null = null;
         if (session.status == "authenticated" && isPreValFlag) {
-            axios.post("http://localhost:10000/api/v1/form/upsert/step5", {
-                userId: session.data.user.id,
-                data: formData
-            }).then((res) => {
-                console.log(res.data);
-            })
-        }
+            timeOut = setTimeout(() => {
+                axios.post("http://localhost:10000/api/v1/form/upsert/step5", {
+                    userId: session.data.user.id,
+                    data: formData
+                }).then((res) => {
+                    console.log(res.data);
+                })
+            },3000);
+        };
+        return ()=>clearTimeout(timeOut);
 
     }, [session, formData])
     return (

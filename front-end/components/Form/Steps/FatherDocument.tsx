@@ -81,7 +81,7 @@ const FatherDocument = () => {
 
     useEffect(() => {
         let timeOutId: NodeJS.Timeout | null = null;
-        if (session.status === "authenticated") {
+        if (session.status === "authenticated" && isPreValFlag) {
             const userId = session.data.user.id;
             timeOutId = setTimeout(() => {
                 axios.post('http://localhost:10000/api/v1/form/upsert/step7', {
@@ -100,6 +100,7 @@ const FatherDocument = () => {
             const userId = session.data.user.id;
             axios.post("http://localhost:10000/api/v1/form/get/step7", { userId })
                 .then((res) => {
+                    console.log(res.data);
                     setFormData((pre) => {
                         return { ...pre, ...res?.data?.payload }
                     });
@@ -107,9 +108,9 @@ const FatherDocument = () => {
             {
                 setTimeout(() => setIsPreValFlag(true), 2000);
             }
-            getDocs(userId,'aadharUpload');
-            getDocs(userId,'drivingLicenseUpload');
-            getDocs(userId,'panUpload');
+            getDocs(userId, 'aadharUpload');
+            getDocs(userId, 'drivingLicenseUpload');
+            getDocs(userId, 'panUpload');
         }
     }, [session]);
     const handleFinish = () => {

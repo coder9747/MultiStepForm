@@ -6,7 +6,7 @@ import Step2 from './Steps/Step2';
 // const steps: Array<ReactElement> = [<Step1 />, <Step2/>]
 
 const userFormCustomHook = (steps:Array<ReactElement>) => {
-    const [activeStep, setActiveStep] = useState<number>(5);
+    const [activeStep, setActiveStep] = useState<number>(0);
     const next = () => {
         setActiveStep((pre) => {
             if (pre == steps.length - 1) return pre;

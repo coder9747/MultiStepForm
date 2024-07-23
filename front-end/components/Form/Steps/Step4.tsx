@@ -200,7 +200,7 @@ const Step4 = () => {
                 {
                     Object.entries(filesUrl).map(([key, value]: [string, string]) => {
                         if (value) {
-                            return <div className=' flex flex-col justify-center items-center'>
+                            return <div key={key} className=' flex flex-col justify-center items-center'>
                                 <img className='h-32' src={value} alt="" />
                                 <p className='text-sm'>{key}</p>
                             </div>
