@@ -37,6 +37,7 @@ const Step4 = () => {
         "aadhar_card": null,
         "cibil_report": null,
     });
+    const [isPreValFlag, setIsPreValFlag] = useState(false);
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -109,13 +110,11 @@ const Step4 = () => {
             }
 
         }
-
-
     }, [fileData, session])
 
     useEffect(() => {
         let token: any = () => { };
-        if (status == "authenticated") {
+        if (status == "authenticated" && isPreValFlag) {
             const userId = session.user.id
             axios.post("http://localhost:10000/api/v1/form/upsert/step3", {
                 userId,
@@ -136,7 +135,10 @@ const Step4 = () => {
                 const res = await axios.post(`${baseUrl}/api/v1/form/get/step3`, {
                     userId: session?.user.id
                 });
-                setFormData({ ...formData, ...res.data.payload });
+                if(res.data.succes){
+                    setFormData({ ...formData, ...res.data.payload });
+                    setTimeout(()=>setIsPreValFlag(true),2000);
+                }
             }
             fetchData();
         }
@@ -178,8 +180,11 @@ const Step4 = () => {
                     </Grid>
                 ))}
             </Grid>
+            <div>
+                Data
+            </div>
             <div className=' px-10 my-2 flex justify-around w-full '>
-                <button  onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
+                <button onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
                 <button className='bg-blue-400 px-10 rounded  py-2' onClick={() => state?.next()}>Next</button>
             </div>
         </Box> : <div className='h-screen flex justify-center items-center'>Loading...</div>

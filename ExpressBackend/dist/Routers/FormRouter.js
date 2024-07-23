@@ -29,4 +29,5 @@ FormRouter.post("/upsert/step7", FormController_1.upsertStep7);
 FormRouter.post("/upsert/doc/step7", upload.single("file"), FormController_1.upsertStep7Doc);
 FormRouter.post("/get/step7", FormController_1.getStep7Data);
 FormRouter.post("/get/data", FormController_1.getFormData);
+FormRouter.post("/getanydocs", FormController_1.getAnyDocsFile);
 exports.default = FormRouter;

@@ -3,6 +3,8 @@ import { Grid, TextField, MenuItem, Button } from '@mui/material';
 import { FormContext } from '@/components/Providers/FormProvider';
 import axios, { Axios } from 'axios';
 import { useSession } from 'next-auth/react';
+import { checkFile } from '@/components/Helpers/CheckFileSize';
+import { supportedImageTypes } from './Step2';
 
 interface EducationFormFields {
     course_name?: string;
@@ -67,6 +69,8 @@ const EducationForm = () => {
     const [formData, setFormData] = useState<EducationFormFields>(initialData);
     const [isFileUploaded, setIsFileUploaded] = useState(false);
     const { state } = useContext(FormContext);
+    const [isPreValFlag, setIsPreValFlag] = useState(false);
+    const [fileUrl, setFileUrl] = useState("");
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -77,25 +81,32 @@ const EducationForm = () => {
         if (session.status == "authenticated") {
             const userId = session?.data?.user.id;
             const { name, files } = e.target;
-            const formData = new FormData();
-            formData.append("file", files[0]);
-            axios.post(`http://localhost:10000/api/v1/form/upload/step6doc?userId=${userId}`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
+            if (checkFile(files[0]) && supportedImageTypes.includes(files[0].type)) {
+                const formData = new FormData();
+                formData.append("file", files[0]);
+                axios.post(`http://localhost:10000/api/v1/form/upload/step6doc?userId=${userId}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then(res => {
+                    if (res.data.succes) {
+                        alert("File Uploade Succesful");
+                        const imageUrl = URL.createObjectURL(files[0]);
+                        setFileUrl(imageUrl);
+                    }
+                    setIsFileUploaded(res.data.succes);
                 }
-            }).then(res => {
-                if (res.data.succes) {
-                    alert("File Uploade Succesful");
-                }
-                setIsFileUploaded(res.data.succes);
+                ).catch((error) => console.error(error));
+
             }
-            ).catch((error) => console.error(error));
+            else {
+                alert("File Should Be Less Than 200 Kb And In Jpeg Jpg Png format");
+            }
+
         }
         else {
             alert("You Are Not Authanticated");
         }
-
-
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -105,7 +116,7 @@ const EducationForm = () => {
     };
     useEffect(() => {
         let token = () => { };
-        if (session.status == "authenticated") {
+        if (session.status == "authenticated" && isPreValFlag) {
             const userId = session?.data.user.id;
             const insertData = async () => {
                 axios.post("http://localhost:10000/api/v1/form/upsert/step6", {
@@ -128,69 +139,95 @@ const EducationForm = () => {
     useEffect(() => {
         if (session.status == "authenticated") {
             const userId = session?.data?.user?.id;
+            axios.post("http://localhost:10000/api/v1/form/getanydocs", {
+                userId,
+                stepNumber: 'step6',
+                fileToGet: 'certificate'
+            }, { responseType: "arraybuffer" }).then((res) => {
+                const imageBlob = new Blob([res.data], { type: "image/jpg" });
+                if (imageBlob.size) {
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    setFileUrl(imageUrl);
+                }
+            }).catch((error) => {
+                console.log(error);
+            })
+
             axios.post("http://localhost:10000/api/v1/form/getstep6data", { userId })
                 .then((res) => {
                     setFormData((pre) => {
                         return { ...pre, ...res.data.payload }
                     });
-                }).catch((err) => console.error(err));
+                }).catch((err) => console.error(err)).finally
+            {
+                setTimeout(() => {
+                    setIsPreValFlag(true);
+                }, 2000)
+            }
+
+
+
         }
     }, [session])
 
     return (
-        session.status == "authenticated" && state ?
-        <div >
-            <Grid container spacing={2} my={2} rowGap={3} px={{ xs: 2, sm: 3, md: 4, lg: 5 }}>
-                {fields.map(field => (
-                    <Grid item xs={12} sm={4} md={4} lg={3} key={field.name}>
-                        {field.type === 'select' ? (
-                            <TextField
-                                select
-                                fullWidth
-                                variant="outlined"
-                                label={field.label}
-                                name={field.name}
-                                value={formData[field.name as keyof EducationFormFields] || ""}
-                                onChange={handleChange}
-                            >
-                                {field.options?.map(option => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        ) : field.type === 'file' ? (
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                type="file"
-                                name={field.name}
-                                label={field.label}
-                                InputLabelProps={{ shrink: true }}
-                                onChange={handleFileChange}
-                            />
-                        ) : (
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                label={field.label}
-                                type={field.type}
-                                name={field.name}
-                                value={formData[field.name as keyof EducationFormFields] || ""}
-                                onChange={handleChange}
-                                InputLabelProps={field.type === 'date' ? { shrink: true } : {}}
-                            />
-                        )}
-                    </Grid>
-                ))}
-            </Grid>
-            <div className=' px-10 flex justify-around w-full '>
-                <button disabled={state.isFirst} onClick={()=>state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
-                <button className='bg-blue-400 px-10 rounded  py-2' onClick={()=>state?.next()}>Next</button>
+        session.status == "authenticated" ?
+            <div >
+                <Grid container spacing={2} my={2} rowGap={3} px={{ xs: 2, sm: 3, md: 4, lg: 5 }}>
+                    {fields.map(field => (
+                        <Grid item xs={12} sm={4} md={4} lg={3} key={field.name}>
+                            {field.type === 'select' ? (
+                                <TextField
+                                    select
+                                    fullWidth
+                                    variant="outlined"
+                                    label={field.label}
+                                    name={field.name}
+                                    value={formData[field.name as keyof EducationFormFields] || ""}
+                                    onChange={handleChange}
+                                >
+                                    {field.options?.map(option => (
+                                        <MenuItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            ) : field.type === 'file' ? (
+                                <TextField
+                                    fullWidth
+                                    variant="outlined"
+                                    type="file"
+                                    name={field.name}
+                                    label={field.label}
+                                    InputLabelProps={{ shrink: true }}
+                                    onChange={handleFileChange}
+                                />
+                            ) : (
+                                <TextField
+                                    fullWidth
+                                    variant="outlined"
+                                    label={field.label}
+                                    type={field.type}
+                                    name={field.name}
+                                    value={formData[field.name as keyof EducationFormFields] || ""}
+                                    onChange={handleChange}
+                                    InputLabelProps={field.type === 'date' ? { shrink: true } : {}}
+                                />
+                            )}
+                        </Grid>
+                    ))}
+                </Grid>
+                {fileUrl && <div className='ms-10 w-56'>
+                    <img src={fileUrl} alt="" />
+                    <p className='text-sm font-bold my-2 text-center'>Highest Certificate</p>
+                </div>}
+                <div className=' px-10 flex justify-around w-full '>
+                    <button  onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
+                    <button className='bg-blue-400 px-10 rounded  py-2' onClick={() => state?.next()}>Next</button>
 
-            </div>
+                </div>
 
-        </div>:<div className='h-screen flex justify-center items-center'>Loading...</div>
+            </div> : <div className='h-screen flex justify-center items-center'>Loading...</div>
     );
 };
 

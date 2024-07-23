@@ -1,5 +1,5 @@
 import express from "express";
-import { getFormData, getStep3Data, getStep4Data, getStep5Data, getStep6Data, getStep7Data, readFormStep1, readFormStep2, uploadAddress, uploadDocsStep5, uploadStep3Docs, upsertFormStep1, upsertFormStep2, upsertFormStep3, upsertStep4, upsertStep5, upsertStep6, upsertStep6Docs, upsertStep7, upsertStep7Doc } from "../Controller/FormController";
+import {  getAnyDocsFile, getFormData, getStep3Data, getStep4Data, getStep5Data, getStep6Data, getStep7Data, readFormStep1, readFormStep2, uploadAddress, uploadDocsStep5, uploadStep3Docs, upsertFormStep1, upsertFormStep2, upsertFormStep3, upsertStep4, upsertStep5, upsertStep6, upsertStep6Docs, upsertStep7, upsertStep7Doc } from "../Controller/FormController";
 import multer from "multer";
 const storage = multer.memoryStorage();
 const upload = multer({storage});
@@ -7,6 +7,7 @@ const upload = multer({storage});
 
 
 const FormRouter = express.Router();
+
 
 FormRouter.post("/upsert/step1", upsertFormStep1);
 FormRouter.post('/get/step1', readFormStep1);
@@ -28,7 +29,6 @@ FormRouter.post("/upsert/step7",upsertStep7);
 FormRouter.post("/upsert/doc/step7",upload.single("file"),upsertStep7Doc);
 FormRouter.post("/get/step7",getStep7Data);
 FormRouter.post("/get/data",getFormData);
-
-
+FormRouter.post("/getanydocs",getAnyDocsFile);
 
 export default FormRouter;

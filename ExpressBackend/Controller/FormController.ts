@@ -144,15 +144,15 @@ export const uploadStep3Docs = async (req: Request, res: Response) => {
     const data: Partial<Step3> = {};
     if (type == 'pan_card') {
         data.pan_card = buffer,
-        data.pan_card_mimetype = mimetype;
+            data.pan_card_mimetype = mimetype;
     }
     else if (type == "aadhar_card") {
         data.aadhar_card = buffer,
-        data.aadhar_card_mimetype = mimetype
+            data.aadhar_card_mimetype = mimetype
     }
     else if (type == "cibil_report") {
         data.cibil_report = buffer,
-        data.cibil_report_mimetype = mimetype
+            data.cibil_report_mimetype = mimetype
     }
     else {
         return res.json({ succes: false, message: "type Not Matched" });
@@ -476,6 +476,37 @@ export const getFormData = async (req: Request, res: Response) => {
     }
 }
 
+//get any docs
+export const getAnyDocsFile = async (req: Request, res: Response) => {
+    type StepNumber = 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7';
+
+    // Destructure and validate inputs
+    const { userId, stepNumber, fileToGet }: {
+        userId: string,
+        stepNumber: StepNumber,
+        fileToGet: string
+    } = req.body;
+    if (!userId || !stepNumber || !fileToGet) {
+        return res.status(400).json({ success: false, message: "Data Required To Fetch" });
+    };
+    try {
+        const stepModel = prisma[stepNumber as keyof typeof prisma];
+        // Fetch the document and select the required field
+        //@ts-ignore
+        const data = await stepModel.findUnique({
+            where: { userId },
+            select: {
+                [fileToGet]: true
+            }
+        });
+        res.setHeader("Content-Type", "image/*");
+        return res.send(data[fileToGet]);
+    } catch (error) {
+        console.log(error);
+        console.error("Error fetching file:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
 
 
 

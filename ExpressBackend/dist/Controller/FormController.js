@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFormData = exports.getStep7Data = exports.upsertStep7Doc = exports.upsertStep7 = exports.getStep6Data = exports.upsertStep6Docs = exports.upsertStep6 = exports.uploadDocsStep5 = exports.getStep5Data = exports.upsertStep5 = exports.getStep4Data = exports.upsertStep4 = exports.getStep3Data = exports.uploadStep3Docs = exports.upsertFormStep3 = exports.uploadAddress = exports.readFormStep2 = exports.upsertFormStep2 = exports.readFormStep1 = exports.upsertFormStep1 = void 0;
+exports.getAnyDocsFile = exports.getFormData = exports.getStep7Data = exports.upsertStep7Doc = exports.upsertStep7 = exports.getStep6Data = exports.upsertStep6Docs = exports.upsertStep6 = exports.uploadDocsStep5 = exports.getStep5Data = exports.upsertStep5 = exports.getStep4Data = exports.upsertStep4 = exports.getStep3Data = exports.uploadStep3Docs = exports.upsertFormStep3 = exports.uploadAddress = exports.readFormStep2 = exports.upsertFormStep2 = exports.readFormStep1 = exports.upsertFormStep1 = void 0;
 const Db_config_1 = __importDefault(require("../Db/Db.config"));
 const HelperAuth_1 = require("../Helpers/HelperAuth");
 //step1 
@@ -468,3 +468,31 @@ const getFormData = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getFormData = getFormData;
+//get any docs
+const getAnyDocsFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Destructure and validate inputs
+    const { userId, stepNumber, fileToGet } = req.body;
+    if (!userId || !stepNumber || !fileToGet) {
+        return res.status(400).json({ success: false, message: "Data Required To Fetch" });
+    }
+    ;
+    try {
+        const stepModel = Db_config_1.default[stepNumber];
+        // Fetch the document and select the required field
+        //@ts-ignore
+        const data = yield stepModel.findUnique({
+            where: { userId },
+            select: {
+                [fileToGet]: true
+            }
+        });
+        res.setHeader("Content-Type", "image/*");
+        return res.send(data[fileToGet]);
+    }
+    catch (error) {
+        console.log(error);
+        console.error("Error fetching file:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+});
+exports.getAnyDocsFile = getAnyDocsFile;

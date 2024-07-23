@@ -58,7 +58,7 @@ model Step2 {
   stay_from_date         String?
   stay_till_date         String?
   full_address           String?
-  address_proof_file     Bytes? // Change to Bytes to store binary data
+  address_proof_file     Bytes? 
   address_proof_mimetype String?
   userId                 String   @unique
   user                   User     @relation(fields: [userId], references: [id])
@@ -103,7 +103,7 @@ model Step5 {
   from                     String?
   to                       String?
   salary                   String?
-  salarySlip               Bytes? // For file uploads, use Bytes to store binary data
+  salarySlip               Bytes? 
   salarySlipMimeType       String?
   relievingLetter          Bytes?
   relievingLetterMimeType  String?
@@ -128,7 +128,7 @@ model Step6 {
   gpa_percentage      String?
   roll_number         String?
   certificate_number  String?
-  certificate         Bytes? // For file uploads, use Bytes to store binary data
+  certificate         Bytes? 
   certificateMimeType String?
   userId              String  @unique
   user                User    @relation(fields: [userId], references: [id])
@@ -137,7 +137,7 @@ model Step6 {
 model Step7 {
   id                           String   @id @default(uuid())
   aadharNumber                 String?
-  aadharUpload                 Bytes? // For file uploads, use Bytes to store binary data
+  aadharUpload                 Bytes? 
   aadharUploadMimeType         String?
   panNumber                    String?
   panUpload                    Bytes?

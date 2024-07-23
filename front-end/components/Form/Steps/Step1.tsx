@@ -102,9 +102,10 @@ const initialData = {
 const Step1 = () => {
   const session = useSession();
   const [step1Data, setStep1Data] = useState<Step1>(initialData);
+  const [isPreValFlag,setIsPreValFlag] = useState(false);
   useEffect(() => {
     let token: any = () => { };
-    if (session.status == "authenticated") {
+    if (session.status == "authenticated" && isPreValFlag) {
       const userId = session.data.user.id;
       axios.post("http://localhost:10000/api/v1/form/upsert/step1", {
         userId,
@@ -127,10 +128,9 @@ const Step1 = () => {
         if (data.payload) {
           setStep1Data({ ...step1Data, ...data.payload });
         }
-        //  setStep1Data(data);
       }).catch((error) => {
         console.error('failed to get previews data');
-      })
+      }).finally(()=>setTimeout(()=>setIsPreValFlag(true),500));
     };
   }, [session]);
 
@@ -156,8 +156,6 @@ const Step1 = () => {
       <Grid container spacing={2} my={'20px'} rowGap={3} px={
         { xs: "20px", sm: "30px", md: '40px', lg: '50px' }
       }>
-
-
         {step1fields.map(field => (
           <Grid item xs={12} sm={4} md={4} lg={3} key={field.name}>
 
