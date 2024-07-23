@@ -115,25 +115,22 @@ const EducationForm = () => {
         console.log(formData);
     };
     useEffect(() => {
-        let token = () => { };
+        let timeOut: NodeJS.Timeout | null = null;
         if (session.status == "authenticated" && isPreValFlag) {
             const userId = session?.data.user.id;
-            const insertData = async () => {
+            timeOut = setTimeout(() => {
                 axios.post("http://localhost:10000/api/v1/form/upsert/step6", {
                     userId,
                     data: formData,
-                }, {
-                    cancelToken: new axios.CancelToken((c) => token = c),
                 }).then((res) => {
                     console.log(res.data);
                 }).catch(err => {
                     console.error(err);
                 }
                 )
-            }
-            insertData();
+            }, 3000)
         }
-        return () => token();
+        return () => clearTimeout(timeOut);
 
     }, [formData]);
     useEffect(() => {
@@ -222,7 +219,7 @@ const EducationForm = () => {
                     <p className='text-sm font-bold my-2 text-center'>Highest Certificate</p>
                 </div>}
                 <div className=' px-10 flex justify-around w-full '>
-                    <button  onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
+                    <button onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
                     <button className='bg-blue-400 px-10 rounded  py-2' onClick={() => state?.next()}>Next</button>
 
                 </div>
