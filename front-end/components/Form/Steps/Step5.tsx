@@ -57,6 +57,26 @@ const Step5 = () => {
     const [formData, setFormData] = useState<EmploymentFormFields>(initialData);
     const { state } = useContext(FormContext);
     const [file, setFile] = useState({ salarySlip: null, relievingLetter: null, experienceLetter: null });
+    const [fileUrls, setFileUrls] = useState(false);
+    const [isPreValFlag, setIsPreValFlag] = useState<boolean>(false);
+
+    const uploadDocs = async (name: string, file: File, userId: string) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        axios.post(`http://localhost:10000/api/v1/form/uploaddocs/step5?userId=${userId}&type=${name}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }).then((res) => {
+            console.log(res.data);
+            if (res.data.succes) {
+                alert(name + " Uploaded")
+            }
+            else {
+                alert("Failed To Upload")
+            }
+        }).catch(console.error);
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, files } = e.target;
@@ -66,58 +86,8 @@ const Step5 = () => {
                 return;
             }
             if (session.status == "authenticated") {
-                const userId = session.data.user.id;
-                if (name == 'salarySlip') {
-                    const formData = new FormData();
-                    formData.append('file', files[0]);
-                    axios.post(`http://localhost:10000/api/v1/form/uploaddocs/step5?userId=${userId}&type=salarySlip`, formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    }).then((res) => {
-                        console.log(res.data);
-                        if (res.data.succes) {
-                            alert("Salary Slip  Uploaded")
-                        }
-                        else {
-                            alert("Failed To Upload")
-                        }
-                    })
-                }
-                if (name == 'relievingLetter') {
-                    const formData = new FormData();
-                    formData.append('file', files[0]);
-                    axios.post(`http://localhost:10000/api/v1/form/uploaddocs/step5?userId=${userId}&type=relievingLetter`, formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    }).then((res) => {
-                        console.log(res.data);
-                        if (res.data.succes) {
-                            alert("Relieving Letter Uploaded")
-                        }
-                        else {
-                            alert("Failed To Upload")
-                        }
-                    })
-                }
-                if (name == 'experienceLetter') {
-                    const formData = new FormData();
-                    formData.append('file', files[0]);
-                    axios.post(`http://localhost:10000/api/v1/form/uploaddocs/step5?userId=${userId}&type=experienceLetter`, formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    }).then((res) => {
-                        if (res.data.succes) {
-                            alert("Experience Letter Uploaded")
-                        }
-                        else {
-                            alert("Failed To Upload")
-                        }
-                    })
-                }
-
+                const userId = session?.data?.user?.id;
+                uploadDocs(name, files[0], userId);
             }
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
@@ -131,11 +101,12 @@ const Step5 = () => {
                     if (res.data.succes && res.data.payload) {
                         setFormData({ ...formData, ...res.data.payload });
                     }
+                    setTimeout(() => setIsPreValFlag(true), 2000);
                 })
         }
     }, [session])
     useEffect(() => {
-        if (session.status == "authenticated") {
+        if (session.status == "authenticated" && isPreValFlag) {
             axios.post("http://localhost:10000/api/v1/form/upsert/step5", {
                 userId: session.data.user.id,
                 data: formData
@@ -179,7 +150,6 @@ const Step5 = () => {
             <div className=' px-10 flex justify-around w-full '>
                 <button onClick={() => state.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
                 <button className='bg-blue-400 px-10 rounded  py-2' onClick={() => state?.next()}>Next</button>
-
             </div>
         </div> : <div className='h-screen flex justify-center items-center'>Loading...</div>
     );

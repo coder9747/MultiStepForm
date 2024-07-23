@@ -3,6 +3,7 @@ import { Grid, MenuItem, TextField, InputLabel, FormControl, Button, Box } from 
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { FormContext } from '@/components/Providers/FormProvider';
+import { checkFile } from '@/components/Helpers/CheckFileSize';
 
 let baseUrl = 'http://localhost:10000';
 
@@ -38,6 +39,11 @@ const Step4 = () => {
         "cibil_report": null,
     });
     const [isPreValFlag, setIsPreValFlag] = useState(false);
+    const [filesUrl, setFilesUrl] = useState({
+        "pan_card": "",
+        "aadhar_card": "",
+        "cibil_report": "",
+    });
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -57,56 +63,62 @@ const Step4 = () => {
             alert("Unsupported Type");
         }
     };
+
+    const uploadDocs = async (userId: string, type: string, file: File) => {
+        if (checkFile(file) && supportedImageTypes.includes(file.type)) {
+            const formData = new FormData();
+            formData.append("file", file);
+            axios.post(`${baseUrl}/api/v1/form/upload/docs?userId=${userId}&type=${type}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then((res) => {
+                if (res.data.succes) {
+                    alert(type + " uploaded Succesful");
+                    const imageUrl = URL.createObjectURL(file);
+                    setFilesUrl((pre) => {
+                        return { ...pre, [type]: imageUrl };
+                    })
+                }
+                else {
+                    alert("Adhar upload error");
+                }
+            })
+        }
+        else {
+            alert("Unsupported Data");
+        }
+    }
+    const getPreDocs = async (userId: string, fileName: string) => {
+        axios.post("http://localhost:10000/api/v1/form/getanydocs", {
+            userId,
+            stepNumber: 'step3',
+            fileToGet: fileName,
+        }, { responseType: "arraybuffer" }).then((res) => {
+            const imageBlob = new Blob([res.data], { type: "image/jpg" });
+            if (imageBlob.size) {
+                const imageUrl = URL.createObjectURL(imageBlob);
+                setFilesUrl((pre) => {
+                    return { ...pre, [fileName]: imageUrl }
+                });
+            }
+        }).catch((error) => {
+            console.log(error);
+        })
+    }
+
+
     useEffect(() => {
         if (status == 'authenticated') {
             const userId = session.user.id;
             if (fileData.aadhar_card != null) {
-                const formData = new FormData();
-                formData.append("file", fileData.aadhar_card);
-                axios.post(`${baseUrl}/api/v1/form/upload/docs?userId=${userId}&type=aadhar_card`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }).then((res) => {
-                    if (res.data.succes) {
-                        alert("Adhar uploaded Succesful");
-                    }
-                    else {
-                        alert("Adhar upload error");
-                    }
-                })
+                uploadDocs(userId, 'aadhar_card', fileData.aadhar_card);
             }
             else if (fileData.cibil_report != null) {
-                const formData = new FormData();
-                formData.append("file", fileData.cibil_report);
-                axios.post(`${baseUrl}/api/v1/form/upload/docs?userId=${userId}&type=pan_card`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }).then((res) => {
-                    if (res.data.succes) {
-                        alert("Cibil uploaded Succesful");
-                    }
-                    else {
-                        alert("Cibil upload error");
-                    }
-                })
+                uploadDocs(userId, 'cibil_report', fileData.cibil_report);
             }
             else if (fileData.pan_card != null) {
-                const formData = new FormData();
-                formData.append("file", fileData.pan_card);
-                axios.post(`${baseUrl}/api/v1/form/upload/docs?userId=${userId}&type=pan_card`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }).then((res) => {
-                    if (res.data.succes) {
-                        alert("pan uploaded Succesful");
-                    }
-                    else {
-                        alert("pan upload error");
-                    }
-                })
+                uploadDocs(userId, 'pan_card', fileData.pan_card);
             }
 
         }
@@ -131,16 +143,20 @@ const Step4 = () => {
     }, [formData]);
     useEffect(() => {
         if (status == "authenticated") {
+            const userId = session?.user?.id;
             const fetchData = async () => {
                 const res = await axios.post(`${baseUrl}/api/v1/form/get/step3`, {
-                    userId: session?.user.id
+                    userId,
                 });
-                if(res.data.succes){
+                if (res.data.succes) {
                     setFormData({ ...formData, ...res.data.payload });
-                    setTimeout(()=>setIsPreValFlag(true),2000);
+                    setTimeout(() => setIsPreValFlag(true), 2000);
                 }
             }
             fetchData();
+            getPreDocs(userId,'pan_card');
+            getPreDocs(userId,'aadhar_card');
+            getPreDocs(userId,'cibil_report');
         }
 
 
@@ -180,10 +196,20 @@ const Step4 = () => {
                     </Grid>
                 ))}
             </Grid>
-            <div>
-                Data
+            <div className='flex flex-wrap justify-around  my-5'>
+                {
+                    Object.entries(filesUrl).map(([key, value]: [string, string]) => {
+                        if (value) {
+                            return <div className=' flex flex-col justify-center items-center'>
+                                <img className='h-32' src={value} alt="" />
+                                <p className='text-sm'>{key}</p>
+                            </div>
+                        }
+                        return null;
+                    })
+                }
             </div>
-            <div className=' px-10 my-2 flex justify-around w-full '>
+            <div className=' px-10 my-6 flex justify-around w-full '>
                 <button onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
                 <button className='bg-blue-400 px-10 rounded  py-2' onClick={() => state?.next()}>Next</button>
             </div>
