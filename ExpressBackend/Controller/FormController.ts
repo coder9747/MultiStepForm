@@ -185,7 +185,7 @@ export const getStep3Data = async (req: Request, res: Response) => {
             where: { userId },
 
         });
-        const modifiedData = removeEmptyAndSpecificValues(data, ['aadhar_card', 'pan_card', 'cibile_score']);
+        const modifiedData = removeEmptyAndSpecificValues(data, ['aadhar_card', 'pan_card', 'cibil_report']);
         return res.json({ succes: true, message: "Data Fetched Succesful", payload: modifiedData });
     } catch (error) {
         console.log(error);
@@ -475,7 +475,6 @@ export const getFormData = async (req: Request, res: Response) => {
         return res.json({ succes: false, message: "Internal Server Error" });
     }
 }
-
 //get any docs
 export const getAnyDocsFile = async (req: Request, res: Response) => {
     type StepNumber = 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7';

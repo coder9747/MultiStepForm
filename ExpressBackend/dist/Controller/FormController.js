@@ -185,7 +185,7 @@ const getStep3Data = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const data = yield Db_config_1.default.step3.findUnique({
             where: { userId },
         });
-        const modifiedData = (0, HelperAuth_1.removeEmptyAndSpecificValues)(data, ['aadhar_card', 'pan_card', 'cibile_score']);
+        const modifiedData = (0, HelperAuth_1.removeEmptyAndSpecificValues)(data, ['aadhar_card', 'pan_card', 'cibil_report']);
         return res.json({ succes: true, message: "Data Fetched Succesful", payload: modifiedData });
     }
     catch (error) {

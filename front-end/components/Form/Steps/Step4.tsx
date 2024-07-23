@@ -63,7 +63,6 @@ const Step4 = () => {
             alert("Unsupported Type");
         }
     };
-
     const uploadDocs = async (userId: string, type: string, file: File) => {
         if (checkFile(file) && supportedImageTypes.includes(file.type)) {
             const formData = new FormData();
@@ -106,8 +105,6 @@ const Step4 = () => {
             console.log(error);
         })
     }
-
-
     useEffect(() => {
         if (status == 'authenticated') {
             const userId = session.user.id;
@@ -120,25 +117,28 @@ const Step4 = () => {
             else if (fileData.pan_card != null) {
                 uploadDocs(userId, 'pan_card', fileData.pan_card);
             }
-
         }
     }, [fileData, session])
 
     useEffect(() => {
-        let token: any = () => { };
+
+        let timeOutId: any = null;
         if (status == "authenticated" && isPreValFlag) {
             const userId = session.user.id
-            axios.post("http://localhost:10000/api/v1/form/upsert/step3", {
-                userId,
-                data: formData,
-            }, { cancelToken: new axios.CancelToken((c) => token = c) })
-                .then((res) => {
-                    console.log(res.data);
-                }).catch((err) => {
-                    console.log('canceled');
+            timeOutId = setTimeout(() => {
+                axios.post("http://localhost:10000/api/v1/form/upsert/step3", {
+                    userId,
+                    data: formData,
                 })
+                    .then((res) => {
+                        console.log(res.data);
+                    }).catch((err) => {
+                        console.log('canceled');
+                    })
+
+            }, 3000);
         }
-        return () => token();
+        return () => clearTimeout(timeOutId);
 
     }, [formData]);
     useEffect(() => {
@@ -154,9 +154,9 @@ const Step4 = () => {
                 }
             }
             fetchData();
-            getPreDocs(userId,'pan_card');
-            getPreDocs(userId,'aadhar_card');
-            getPreDocs(userId,'cibil_report');
+            getPreDocs(userId, 'pan_card');
+            getPreDocs(userId, 'aadhar_card');
+            getPreDocs(userId, 'cibil_report');
         }
 
 

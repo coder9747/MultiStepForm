@@ -57,7 +57,9 @@ const Step5 = () => {
     const [formData, setFormData] = useState<EmploymentFormFields>(initialData);
     const { state } = useContext(FormContext);
     const [file, setFile] = useState({ salarySlip: null, relievingLetter: null, experienceLetter: null });
-    const [fileUrls, setFileUrls] = useState(false);
+    const [fileUrls, setFileUrls] = useState({
+        salarySlip: "", relievingLetter: "", experienceLetter: ""
+    })
     const [isPreValFlag, setIsPreValFlag] = useState<boolean>(false);
 
     const uploadDocs = async (name: string, file: File, userId: string) => {
@@ -70,12 +72,33 @@ const Step5 = () => {
         }).then((res) => {
             console.log(res.data);
             if (res.data.succes) {
+                const imageUrl = URL.createObjectURL(file);
+                setFileUrls((pre) => {
+                    return { ...pre, [name]: imageUrl }
+                });
                 alert(name + " Uploaded")
             }
             else {
                 alert("Failed To Upload")
             }
         }).catch(console.error);
+    }
+    const getPreDocs = async (type: string, userId: string) => {
+        axios.post("http://localhost:10000/api/v1/form/getanydocs", {
+            userId,
+            stepNumber: 'step5',
+            fileToGet: type
+        }, { responseType: "arraybuffer" }).then((res) => {
+            const imageBlob = new Blob([res.data], { type: "image/jpg" });
+            if (imageBlob.size) {
+                const imageUrl = URL.createObjectURL(imageBlob);
+                setFileUrls((pre) => {
+                    return { ...pre, [type]: imageUrl }
+                });
+            };
+        }).catch((error) => {
+            console.log(error);
+        })
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +118,7 @@ const Step5 = () => {
     };
     useEffect(() => {
         if (session.status == "authenticated") {
-            const userId = session.data.user.id;
+            const userId = session?.data?.user?.id;
             axios.post("http://localhost:10000/api/v1/form/get/step5", { userId })
                 .then((res) => {
                     if (res.data.succes && res.data.payload) {
@@ -103,6 +126,9 @@ const Step5 = () => {
                     }
                     setTimeout(() => setIsPreValFlag(true), 2000);
                 })
+            getPreDocs('salarySlip', userId);
+            getPreDocs('relievingLetter', userId);
+            getPreDocs('experienceLetter', userId);
         }
     }, [session])
     useEffect(() => {
@@ -147,6 +173,19 @@ const Step5 = () => {
                 ))}
 
             </Grid>
+            <div className='flex flex-wrap my-2 justify-around'>
+                {Object.entries(fileUrls).map((([key, value]: [string, string]) => {
+                    if (value) {
+                        return <div className='flex flex-col justify-center items-center' key={key}>
+                            <img className='w-52 h-32' src={value} />
+                            <p className='text-sm '>{key}</p>
+                        </div>
+                    }
+                    return null;
+                }))
+                }
+
+            </div>
             <div className=' px-10 flex justify-around w-full '>
                 <button onClick={() => state.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
                 <button className='bg-blue-400 px-10 rounded  py-2' onClick={() => state?.next()}>Next</button>

@@ -37,27 +37,27 @@ const Step3 = () => {
     const session = useSession();
     const [formData, setFormData] = useState<ReferenceFormFields>(initialData);
     const { state } = useContext(FormContext);
-
+    const [isPreValFlag, setIsPreValFlag] = useState<boolean>(false);
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        state.next();
-        console.log(formData);
-    };
     useEffect(() => {
-        if (session.status == "authenticated") {
-            const res = axios.post(`${baseUrl}/api/v1/form/upsert/step4`, {
-                userId: session?.data.user.id,
-                data: formData
-            })
-                .then((res) => {
-                    console.log(res.data);
+        let timeOut: NodeJS.Timeout | null = null;
+        if (session.status == "authenticated" && isPreValFlag) {
+            timeOut = setTimeout(() => {
+                axios.post(`${baseUrl}/api/v1/form/upsert/step4`, {
+                    userId: session?.data.user.id,
+                    data: formData
                 })
-        }
+                    .then((res) => {
+                        console.log(res.data);
+                    }).catch((err) => {
+                        console.log('cancel')
+                    })
+            }, 3000);
+        };
+        return () => clearTimeout(timeOut);
     }, [formData])
     useEffect(() => {
         if (session.status == "authenticated") {
@@ -66,9 +66,11 @@ const Step3 = () => {
                     setFormData({ ...formData, ...res.data.payload });
                 }).catch((error) => {
                     console.error(error);
-                })
+                }).finally
+            {
+                setTimeout(() => setIsPreValFlag(true), 2000);
+            }
         }
-
     }, [session])
 
     return (
@@ -88,7 +90,7 @@ const Step3 = () => {
                     </Grid>
                 ))}
                 <div className=' px-10 flex justify-around w-full '>
-                    <button  onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
+                    <button onClick={() => state?.pre()} className='bg-blue-400 py-2 px-10 rounded disabled:bg-gray-600 disabled:text-white '>Pre</button>
                     <button className='bg-blue-400 px-10 rounded  py-2' onClick={() => state?.next()}>Next</button>
                 </div>
             </Grid>
